@@ -1,21 +1,19 @@
 const express = require("express");
-const bodyParser = require('body-parser');
+const bodyParser = require("body-parser");
 const app = express();
 const PORT = 8080; // default port 8080
 
-
-
 app.set("view engine", "ejs");
 
-app.use(bodyParser.urlencoded({extended: true}))
+app.use(bodyParser.urlencoded({ extended: true }));
 
-const generateRandomString = function() {
-  
-}
+const generateRandomString = function () {
+return Math.random().toString(36).substr(2, 6); 
+};
 
 const urlDatabase = {
   b2xVn2: "http://www.lighthouselabs.ca",
-  "9sm5xK": "http://www.google.com"
+  "9sm5xK": "http://www.google.com",
 };
 
 //this route handler sends our url database to our EJS template
@@ -30,16 +28,18 @@ app.get("/urls", (req, res) => {
 });
 
 app.post("/urls", (req, res) => {
-console.log(req.body);
-res.send('OK');
+  const newurl = generateRandomString();
+  urlDatabase[newurl] = req.body.longURL;
+  console.log(urlDatabase);
+  res.send('Ok');
 });
 
 app.get("/urls/new", (req, res) => {
-res.render("urls_new");
+  res.render("urls_new");
 });
 
 app.get("/urls/:shortURL", (req, res) => {
-  const key = req.params.shortURL
+  const key = req.params.shortURL;
   const templateVars = { shortURL: key, longURL: urlDatabase[key] }; //urlDatabase?u
   res.render("urls_show", templateVars);
 });
