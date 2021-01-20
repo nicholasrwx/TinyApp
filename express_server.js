@@ -1,8 +1,17 @@
 const express = require("express");
+const bodyParser = require('body-parser');
 const app = express();
 const PORT = 8080; // default port 8080
 
+
+
 app.set("view engine", "ejs");
+
+app.use(bodyParser.urlencoded({extended: true}))
+
+const generateRandomString = function() {
+  
+}
 
 const urlDatabase = {
   b2xVn2: "http://www.lighthouselabs.ca",
@@ -10,9 +19,23 @@ const urlDatabase = {
 };
 
 //this route handler sends our url database to our EJS template
+//the order of router definitions matter
+//they need to be above the :shortURL ... this one will look up the url always
+//therefore you will never get to your other pages
+//rule of thumb: order from most basic routes, to least specific routes
+
 app.get("/urls", (req, res) => {
   const templateVars = { urls: urlDatabase };
   res.render("urls_index", templateVars);
+});
+
+app.post("/urls", (req, res) => {
+console.log(req.body);
+res.send('OK');
+});
+
+app.get("/urls/new", (req, res) => {
+res.render("urls_new");
 });
 
 app.get("/urls/:shortURL", (req, res) => {
