@@ -23,9 +23,11 @@
 
     <main style="margin: 1em">
       <h3>Create TinyURL</h3>
-      <form class="form-inline" action="/urls" method="POST">
+      <!--the form on this page is what is linked to the post request in express_server.js to '/urls'-->
+      <form class="form-inline" action="/urls" method="POST"> 
         <div class="form-group mb-2">
           <label for="longURL">Enter a URL:</label>
+          <!--input is parsed into a JS Object, where longURL is the key.-->
           <input
             class="form-control"
             type="text"
