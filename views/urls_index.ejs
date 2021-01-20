@@ -8,7 +8,7 @@
     />
 
     <!-- Bootstrap CSS -->
-    <link href='#'/>
+    <link href="#" />
     <link
       rel="stylesheet"
       href="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css"
@@ -18,7 +18,8 @@
     <title>TinyApp</title>
   </head>
   <body>
-    <%- include('partials/_header') %> <!--header partial-->
+    <%- include('partials/_header') %>
+    <!--header partial-->
     <main style="margin: 1em">
       <h3>My URLs</h3>
       <table class="table">
@@ -26,6 +27,7 @@
           <tr>
             <th scope="col">Short URL</th>
             <th scope="col">Long URL</th>
+            <th scope="col">Delete</th>
           </tr>
         </thead>
         <tbody>
@@ -33,6 +35,12 @@
           <tr>
             <td><%= url %></td>
             <td><%= urls[url] %></td>
+            <td>
+              <form method="POST" action="/urls/<%= url %>/delete">
+                <input type="submit" value="Submit" style="color:red"/>
+                
+              </form>
+            </td>
           </tr>
           <% } %>
         </tbody>
