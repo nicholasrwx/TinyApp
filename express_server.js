@@ -6,7 +6,7 @@ app.set("view engine", "ejs");
 
 const urlDatabase = {
   b2xVn2: "http://www.lighthouselabs.ca",
-  "9sm5xK": "http://www.google.com",
+  "9sm5xK": "http://www.google.com"
 };
 
 //this route handler sends our url database to our EJS template
@@ -16,9 +16,10 @@ app.get("/urls", (req, res) => {
 });
 
 app.get("/urls/:shortURL", (req, res) => {
-  const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase }
-  res.render("urls_show", templateVars )
-})
+  const key = req.params.shortURL
+  const templateVars = { shortURL: key, longURL: urlDatabase[key] }; //urlDatabase?u
+  res.render("urls_show", templateVars);
+});
 
 app.get("/", (req, res) => {
   res.send("Hello!");

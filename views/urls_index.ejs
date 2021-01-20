@@ -1,41 +1,35 @@
-<!--A list or table of the URLs and their shortened forms
-
-
 <!DOCTYPE html>
-
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <!-- the stylesheet in the link is from bootstrap, and is one of the most popular CSS frameworks around-->
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, shrink-to-fit=no"
+    />
+
+    <!-- Bootstrap CSS -->
+    <link href='#'/>
     <link
       rel="stylesheet"
       href="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css"
       integrity="sha384-GJzZqFGwb1QTTN6wy59ffF1BuGJpLSa9DkKMp0DgiMDm4iYMj70gZWKYbI706tWS"
       crossorigin="anonymous"
     />
-<!--an empty link for shortening new links later-->
-    <link 
-    href=#
-    />
-
     <title>TinyApp</title>
   </head>
-
   <body>
+    <%- include('partials/_header') %> <!--header partial-->
     <main style="margin: 1em">
       <h3>My URLs</h3>
-
       <table class="table">
-        <thread>
+        <thead>
           <tr>
             <th scope="col">Short URL</th>
-
             <th scope="col">Long URL</th>
           </tr>
-        </thread>
+        </thead>
         <tbody>
-          <% for (let url in urls) { %>
-
+          <% for(let url in urls) { %>
           <tr>
             <td><%= url %></td>
             <td><%= urls[url] %></td>
@@ -44,7 +38,7 @@
         </tbody>
       </table>
     </main>
-    <!--these .js files below are required sources by some part of the integrated Bootstrap CSS Framework-->
+    <!-- Bootstrap JS -->
     <script
       src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
       integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
