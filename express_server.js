@@ -28,17 +28,46 @@ const urlDatabase = {
   "9sm5xK": "http://www.google.com",
 };
 
-//GET REQUESTS
+//USERS DataStore
 
+const users = {
+  userRandomID: {
+    id: "userRandomID",
+    email: "user@example.com",
+    password: "purple-monkey-dinosaur",
+  },
+  user2RandomID: {
+    id: "user2RandomID",
+    email: "user2@example.com",
+    password: "dishwasher-funk",
+  },
+};
+
+//GET REQUESTS
+let loggedinUser
 //GET URLS INDEX page
 app.get("/urls", (req, res) => {
-  const templateVars = { urls: urlDatabase, username: req.cookies["username"] };
+  
+  console.log(req.cookies['user_id']);
+  
+  if (!req.cookies['user_id']){
+ loggedinUser = null;   
+  } else { 
+    loggedinUser = users[req.cookies['user_id']]
+  }
+  const templateVars = { urls: urlDatabase, username: loggedinUser };
   res.render("urls_index", templateVars);
+});
+
+//GET REGISTRATION page
+app.get("/register", (req, res) => {
+  const templateVars = { urls: urlDatabase, username: null };
+  res.render("registration", templateVars);
 });
 
 //GET NEW URL page
 app.get("/urls/new", (req, res) => {
-  const templateVars = { urls: urlDatabase, username: req.cookies["username"] };
+  const templateVars = { urls: urlDatabase, username: loggedinUser };
   res.render("urls_new", templateVars);
 });
 
@@ -50,7 +79,7 @@ app.get("/urls/:shortURL", (req, res) => {
     shortURL: key,
     longURL: urlDatabase[key],
     urls: u,
-    username: req.cookies["username"],
+    username: loggedinUser
   }; //urlDatabase?u
   res.render("urls_show", templateVars);
 });
@@ -82,16 +111,49 @@ app.get("/hello", (req, res) => {
 //LOGIN
 app.post("/login", (req, res) => {
   console.log(req.body.name);
-  res.cookie("username", req.body.name);
-  res.redirect("/urls");
+  console.log(users[req.body.name]);
+  let Object1 = {} 
+  for (let user in users) {
+         if (users[user].email === req.body.name) {
+        Object1 = users[user];
+        
+        break; 
+        } 
+        }                    
+  if (Object.keys(Object1).length !== 0) {
+    console.log(Object1);
+    res.cookie("user_id", Object1.id);
+    res.redirect("/urls");
+  } else {
+    //redirect you to register
+    //console.log(req.body.name);
+    //res.cookie("username", req.body.name);
+    res.redirect("/register");
+    console.log(`user doesn't exist`);
+  }
 });
 
 //LOGOUT
 app.post("/logout", (req, res) => {
   console.log(req.body.name);
   //delete req.cookies["username"];
-  res.clearCookie('username', req.body.name);
+  res.clearCookie("user_id", req.body.name);
   console.log(req.body.name);
+  res.redirect("/urls");
+});
+
+//REGISTRATION
+app.post("/register", (req, res) => {
+  //add user object to global users object
+  const RandomID = generateRandomString();
+  console.log(RandomID);
+  users[RandomID] = {
+    id: RandomID,
+    email: req.body.email,
+    password: req.body.password,
+  };
+  res.cookie("user_id", RandomID);
+  console.log(users);
   res.redirect("/urls");
 });
 
