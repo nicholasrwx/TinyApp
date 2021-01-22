@@ -18,6 +18,7 @@
   <body>
     <%- include('partials/_header') %>
    <main>
+
 <td>
     <form class="form-inline" action="/register" method="POST">   
       <label for="longURL">E-mail:</label>
@@ -43,6 +44,11 @@
    </td>
    <td>
         <button type="submit" class="btn btn-primary">Register</button> 
+      </td>
+      <td>
+        <div class="error-msg" style="margin: 1em">
+        <%= error %>
+       </div>
       </td>
       </form>
    </main>

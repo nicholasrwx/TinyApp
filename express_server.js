@@ -1,6 +1,7 @@
 const express = require("express"); //Use Express
 const bodyParser = require("body-parser"); //Convert Buffer info into a usable txt format
 const cookieParser = require("cookie-parser");
+//const status = require("status");
 const app = express(); //express JS function redefined in variable form.
 const PORT = 8080; // default port 8080
 
@@ -43,17 +44,26 @@ const users = {
   },
 };
 
+
+const email = function (reqEmail) {
+  for (let user in users) {
+    if (users[user].email === reqEmail) {
+      return reqEmail;
+    }
+  }
+  return null;
+};
+
 //GET REQUESTS
-let loggedinUser
+let loggedinUser;
 //GET URLS INDEX page
 app.get("/urls", (req, res) => {
-  
-  console.log(req.cookies['user_id']);
-  
-  if (!req.cookies['user_id']){
- loggedinUser = null;   
-  } else { 
-    loggedinUser = users[req.cookies['user_id']]
+  console.log(req.cookies["user_id"]);
+
+  if (!req.cookies["user_id"]) {
+    loggedinUser = null;
+  } else {
+    loggedinUser = users[req.cookies["user_id"]];
   }
   const templateVars = { urls: urlDatabase, username: loggedinUser };
   res.render("urls_index", templateVars);
@@ -61,7 +71,7 @@ app.get("/urls", (req, res) => {
 
 //GET REGISTRATION page
 app.get("/register", (req, res) => {
-  const templateVars = { urls: urlDatabase, username: null };
+  const templateVars = { urls: urlDatabase, username: null, error: null };
   res.render("registration", templateVars);
 });
 
@@ -79,7 +89,7 @@ app.get("/urls/:shortURL", (req, res) => {
     shortURL: key,
     longURL: urlDatabase[key],
     urls: u,
-    username: loggedinUser
+    username: loggedinUser,
   }; //urlDatabase?u
   res.render("urls_show", templateVars);
 });
@@ -90,20 +100,9 @@ app.get("/u/:shortURL", (req, res) => {
   res.redirect(longURL);
 });
 
-//GET hello
-app.get("/", (req, res) => {
-  const username = req;
-  console.log(username);
-});
-
-//GET URLDATABASE info
-app.get("/urls.json", (req, res) => {
-  res.json(urlDatabase);
-});
-
-//GET hello, in-line html
-app.get("/hello", (req, res) => {
-  res.send("<html><body>Hello <b>World</b></body></html>\n");
+app.get("/*", (req, res) => {
+  res.status(404);
+  res.render("404");
 });
 
 //POST REQUESTS
@@ -112,14 +111,14 @@ app.get("/hello", (req, res) => {
 app.post("/login", (req, res) => {
   console.log(req.body.name);
   console.log(users[req.body.name]);
-  let Object1 = {} 
+  let Object1 = {};
   for (let user in users) {
-         if (users[user].email === req.body.name) {
-        Object1 = users[user];
-        
-        break; 
-        } 
-        }                    
+    if (users[user].email === req.body.name) {
+      Object1 = users[user];
+
+      break;
+    }
+  }
   if (Object.keys(Object1).length !== 0) {
     console.log(Object1);
     res.cookie("user_id", Object1.id);
@@ -145,16 +144,36 @@ app.post("/logout", (req, res) => {
 //REGISTRATION
 app.post("/register", (req, res) => {
   //add user object to global users object
-  const RandomID = generateRandomString();
-  console.log(RandomID);
-  users[RandomID] = {
-    id: RandomID,
-    email: req.body.email,
-    password: req.body.password,
-  };
-  res.cookie("user_id", RandomID);
-  console.log(users);
-  res.redirect("/urls");
+let reqEmail = req.body.email;
+
+  if (req.body.email === "" || req.body.password === "") {
+    res.status(400);
+    const templateVars = {
+      urls: urlDatabase,
+      username: null,
+      error: "400 Error - Fields Cannot Be Blank",
+    };
+    res.render("registration", templateVars);
+  } else if (req.body.email === email(reqEmail)) {
+    res.status(400);
+    const templateVars = {
+      urls: urlDatabase,
+      username: null,
+      error: "400 Error - Username Unavailable",
+    };
+    res.render("registration", templateVars);
+  } else {
+    const RandomID = generateRandomString();
+    console.log(RandomID);
+    users[RandomID] = {
+      id: RandomID,
+      email: req.body.email,
+      password: req.body.password,
+    };
+    res.cookie("user_id", RandomID);
+    console.log(users);
+    res.redirect("/urls");
+  }
 });
 
 //GENERATE TINY URL
