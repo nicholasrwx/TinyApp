@@ -13,15 +13,15 @@
       integrity="sha384-GJzZqFGwb1QTTN6wy59ffF1BuGJpLSa9DkKMp0DgiMDm4iYMj70gZWKYbI706tWS"
       crossorigin="anonymous"
     />
-    <title>Registration</title>
+    <title>Login</title>
   </head>
   <body>
     <%- include('partials/_header') %>
    <main>
 
 <td>
-    <form class="form-inline" action="/register" method="POST">   
-      <label for="newemail">E-mail:</label>
+    <form class="form-inline" action="/login" method="POST">   
+      <label for="email">E-mail:</label>
         <!--input is parsed into a JS Object, where longURL is the key.-->
         <input
           class="form-control"
@@ -32,7 +32,7 @@
         />
       </td>
     <td>
-      <label for="newpassword">password:</label>
+      <label for="password">password:</label>
       <!--input is parsed into a JS Object, where longURL is the key.-->
       <input
         class="form-control"
@@ -43,7 +43,7 @@
       />
    </td>
    <td>
-        <button type="submit" class="btn btn-primary">Register Now</button> 
+        <button type="submit" class="btn btn-primary">Login</button> 
       </td>
       <td>
         <div class="error-msg" style="margin: 1em">

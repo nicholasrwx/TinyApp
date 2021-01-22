@@ -44,22 +44,36 @@ const users = {
   },
 };
 
-
-const email = function (reqEmail) {
+const validator = function (reqEmail, reqPassword, usr) {
   for (let user in users) {
-    if (users[user].email === reqEmail) {
-      return reqEmail;
+    if (reqEmail && reqPassword) {
+      if (
+        users[user].email === reqEmail &&
+        users[user].password === reqPassword
+      ) {
+        if (usr === true) {
+          return user;
+        } else {
+          return true;
+        }
+      }
+    } else {
+      if (users[user].email === reqEmail) {
+        return reqEmail;
+      }
     }
   }
   return null;
 };
 
-//GET REQUESTS
 let loggedinUser;
+
+//GET REQUESTS
+
 //GET URLS INDEX page
 app.get("/urls", (req, res) => {
   console.log(req.cookies["user_id"]);
-
+  console.log(users);
   if (!req.cookies["user_id"]) {
     loggedinUser = null;
   } else {
@@ -73,6 +87,12 @@ app.get("/urls", (req, res) => {
 app.get("/register", (req, res) => {
   const templateVars = { urls: urlDatabase, username: null, error: null };
   res.render("registration", templateVars);
+});
+
+//GET LOGIN page
+app.get("/login", (req, res) => {
+  const templateVars = { urls: urlDatabase, username: null, error: null };
+  res.render("login", templateVars);
 });
 
 //GET NEW URL page
@@ -109,24 +129,35 @@ app.get("/*", (req, res) => {
 
 //LOGIN
 app.post("/login", (req, res) => {
-  console.log(req.body.name);
-  console.log(users[req.body.name]);
-  let Object1 = {};
-  for (let user in users) {
-    if (users[user].email === req.body.name) {
-      Object1 = users[user];
+  console.log(req.body);
 
-      break;
-    }
-  }
-  if (Object.keys(Object1).length !== 0) {
-    console.log(Object1);
-    res.cookie("user_id", Object1.id);
+  let reqEmail = req.body.email;
+  let reqPassword = req.body.password;
+  let data = validator(reqEmail, reqPassword);
+  console.log(data);
+  let usr = data;
+  //console.log(users
+  // let Object1 = {};
+  // for (let user in users) {
+  //   if (users[user].email === req.body.name) {
+  //     Object1 = users[user];
+  //
+  //     break;
+  //   }
+  // }
+  //Object.keys(Object1).length !== 0
+
+  if (usr === true) {
+    usr = validator(reqEmail, reqPassword, usr);
+    //console.log(Object1);
+    //res.cookie("user_id", Object1.id);
+    res.cookie("user_id", usr);
     res.redirect("/urls");
   } else {
     //redirect you to register
     //console.log(req.body.name);
     //res.cookie("username", req.body.name);
+    console.log(users);
     res.redirect("/register");
     console.log(`user doesn't exist`);
   }
@@ -144,7 +175,7 @@ app.post("/logout", (req, res) => {
 //REGISTRATION
 app.post("/register", (req, res) => {
   //add user object to global users object
-let reqEmail = req.body.email;
+  let reqEmail = req.body.email;
 
   if (req.body.email === "" || req.body.password === "") {
     res.status(400);
@@ -154,7 +185,7 @@ let reqEmail = req.body.email;
       error: "400 Error - Fields Cannot Be Blank",
     };
     res.render("registration", templateVars);
-  } else if (req.body.email === email(reqEmail)) {
+  } else if (req.body.email === validator(reqEmail)) {
     res.status(400);
     const templateVars = {
       urls: urlDatabase,
