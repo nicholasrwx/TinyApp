@@ -23,6 +23,9 @@ const generateRandomString = function () {
   return Math.random().toString(36).substr(2, 6);
 };
 
+//If user is logged in or not
+let loggedinUser;
+
 //urlDatabase
 const urlDatabase = {
   b2xVn2: "http://www.lighthouselabs.ca",
@@ -30,20 +33,9 @@ const urlDatabase = {
 };
 
 //USERS DataStore
+const users = { };
 
-const users = {
-  userRandomID: {
-    id: "userRandomID",
-    email: "user@example.com",
-    password: "purple-monkey-dinosaur",
-  },
-  user2RandomID: {
-    id: "user2RandomID",
-    email: "user2@example.com",
-    password: "dishwasher-funk",
-  },
-};
-
+//VALIDATOR for username and password
 const validator = function (reqEmail, reqPassword, usr) {
   for (let user in users) {
     if (reqEmail && reqPassword) {
@@ -66,7 +58,25 @@ const validator = function (reqEmail, reqPassword, usr) {
   return null;
 };
 
-let loggedinUser;
+
+const EmailError = function(reqEmail) {
+
+
+  for (let user in users) {
+if (users[user].email === reqEmail) { return true} 
+} 
+return false;
+}
+
+const PassError = function(reqPassword) {
+for (let user in users) {
+if (users[user].password === reqPassword) { return true};
+}
+return false;
+}
+
+
+
 
 //GET REQUESTS
 
@@ -136,27 +146,39 @@ app.post("/login", (req, res) => {
   let data = validator(reqEmail, reqPassword);
   console.log(data);
   let usr = data;
-  //console.log(users
-  // let Object1 = {};
-  // for (let user in users) {
-  //   if (users[user].email === req.body.name) {
-  //     Object1 = users[user];
-  //
-  //     break;
-  //   }
-  // }
-  //Object.keys(Object1).length !== 0
+  
+  console.log(EmailError(reqEmail) === false);
+  console.log(PassError(reqPassword) === false);
 
-  if (usr === true) {
+if (EmailError(reqEmail) === false && PassError(reqPassword) === true) {
+  res.status(403);
+  const templateVars = {
+    urls: urlDatabase,
+    username: null,
+    error: "403 Error - Incorrect E-mail!",
+  };
+  res.render("login", templateVars);
+} else if (PassError(reqPassword) === false && EmailError(reqEmail) === true) {
+  res.status(403);
+  const templateVars = {
+    urls: urlDatabase,
+    username: null,
+    error: "403 Error - Incorrect Password!",
+  };
+  res.render("login", templateVars);
+} else if (EmailError(reqEmail) === false && PassError(reqPassword) === false) {
+  res.status(403);
+  const templateVars = {
+    urls: urlDatabase,
+    username: null,
+    error: "403 Error - E-mail and Password are Incorrect, Please Try Again!",
+  };
+  res.render("login", templateVars);
+} else if (usr === true) {
     usr = validator(reqEmail, reqPassword, usr);
-    //console.log(Object1);
-    //res.cookie("user_id", Object1.id);
     res.cookie("user_id", usr);
     res.redirect("/urls");
   } else {
-    //redirect you to register
-    //console.log(req.body.name);
-    //res.cookie("username", req.body.name);
     console.log(users);
     res.redirect("/register");
     console.log(`user doesn't exist`);
