@@ -20,45 +20,9 @@
   <body>
     <%- include('partials/_header') %>
     <!--header partial-->
-    <% if (username === null || username === undefined) {%>
-    <main>
-      <h1>Please Login, or Register to view!</h3>
-    </main>
-    <%} else {%>
-
     <main style="margin: 1em">
-      <h3>My URLS</h3>
-      <table class="table">
-        <thead>
-          <tr>
-            <th scope="col">Short URL</th>
-            <th scope="col">Long URL</th>
-            <th scope="col">Edit</th>
-            <th scope="col">Delete</th>
-          </tr>
-        </thead>
-        <tbody>
-          <%= error %>
-              <% for(let url in urls) {%>
-          <tr>
-          <!--['longURL']-->
-            <td><%= url %></td>
-            <td><%= urls[url] %></td>
-            <td>
-              <form method="GET" action="/urls/<%= url %>">
-                <input type="submit" value="Update" style="color: blue" />
-              </form>
-            </td>
-            <td>
-              <form method="POST" action="/urls/<%= url %>/delete">
-                <input type="submit" value="Submit" style="color: red" />
-              </form>
-            </td>
-          </tr>
-          <% } %>
-          <% } %>
-        </tbody>
-      </table>
+      <h3>Hello! Welcome to Tiny App! Please Choose an option from the navigation menu :)</h3>
+      
     </main>
     <!-- Bootstrap JS -->
     <script
