@@ -1,3 +1,7 @@
+const hashLookup = require("./hashLookup");
+const urlsForUser = require("./urlsForUser");
+const validator = require("./validator");
+const checkUserEmail = require("./helpers");
 const express = require("express");
 const bodyParser = require("body-parser"); //Convert Buffer info into a usable txt format
 const cookieSession = require("cookie-session");
@@ -6,27 +10,21 @@ const app = express();
 const PORT = 8080;
 let loggedinUser;
 
+app.set("view engine", "ejs");
+
+app.use(bodyParser.urlencoded({ extended: true }));
+
 app.use(
   cookieSession({
     name: "session",
     keys: ["secret"],
-
     maxAge: 24 * 60 * 60 * 1000,
   })
 );
 
-app.set("view engine", "ejs");
-app.use(bodyParser.urlencoded({ extended: true }));
-
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });
-
-///
-///
-//DATABASES
-///
-///
 
 //URLDATABASE
 const urlDatabase = {
@@ -43,90 +41,20 @@ const users = {
   },
 };
 
-///
-///
-///
-//HELPER FUNCTIONS
-///
-///
-///
-
 //RANDOM STRING GENERATOR
 const generateRandomString = function () {
   return Math.random().toString(36).substr(2, 6);
 };
-//VALIDATOR FOR USERNAME AND PASSWORD
-const validator = function (reqEmail, reqPassword, usr) {
-  console.log(reqPassword);
-  for (let user in users) {
-    if (reqEmail && reqPassword) {
-      if (
-        users[user].email === reqEmail &&
-        users[user].password === reqPassword
-      ) {
-        if (usr === true) {
-          return user;
-        } else {
-          return true;
-        }
-      }
-    } else {
-      if (users[user].email === reqEmail) {
-        return reqEmail;
-      }
-    }
-  }
-  return null;
-};
 
-//EMAIL SPELL CHECKER - FOR ERROR RESPONSES
-const EmailError = function (reqEmail) {
-  for (let user in users) {
-    if (users[user].email === reqEmail) {
-      return true;
-    }
-  }
-  return false;
-};
-
-//FIND USER SPECIFIC URLs by USERID
-const urlsForUser = function (id, urlDatabase) {
-  let shortList = {};
-
-  for (let short in urlDatabase) {
-    if (urlDatabase[short]["UserID"] === id) {
-      shortList[short] = urlDatabase[short]["longURL"];
-    }
-  }
-
-  if (Object.entries(shortList).length === 0) {
-    return false;
-  } else {
-    return shortList;
-  }
-};
-
-//FINDS HASHED PASSWORD FOR COMPARISON
-const validator2 = function (reqEmail) {
-  for (let user in users) {
-    if (reqEmail === users[user].email) {
-      return users[user].password;
-    }
-  }
-  return false;
-};
-
-///
-///
-///
 //GET REQUESTS
-///
-///
-///
 
 //TINY APP PAGE
 app.get("/", (req, res) => {
-  const templateVars = { urls: urlDatabase, username: loggedinUser };
+  const templateVars = {
+    urls: urlDatabase,
+    users: users,
+    userstatus: loggedinUser,
+  };
   res.render("homepage", templateVars);
 });
 
@@ -140,7 +68,8 @@ app.get("/urls", (req, res) => {
 
   const templateVars = {
     urls: urlsForUser(req.session.user_id, urlDatabase),
-    username: loggedinUser,
+    users: users,
+    userstatus: loggedinUser,
     error: null,
   };
   res.render("urls_index", templateVars);
@@ -148,24 +77,38 @@ app.get("/urls", (req, res) => {
 
 //GET REGISTRATION PAGE
 app.get("/register", (req, res) => {
-  const templateVars = { urls: urlDatabase, username: null, error: null };
+  const templateVars = {
+    urls: urlDatabase,
+    users: users,
+    userstatus: null,
+    error: null,
+  };
   res.render("registration", templateVars);
 });
 
 //GET LOGIN PAGE
 app.get("/login", (req, res) => {
-  const templateVars = { urls: urlDatabase, username: null, error: null };
+  const templateVars = {
+    urls: urlDatabase,
+    users: users,
+    userstatus: null,
+    error: null,
+  };
   res.render("login", templateVars);
 });
 
 //GET NEW URL PAGE
 app.get("/urls/new", (req, res) => {
   if (loggedinUser !== null && loggedinUser !== undefined) {
-    const templateVars = { urls: urlDatabase, username: loggedinUser };
+    const templateVars = {
+      urls: urlDatabase,
+      users: users,
+      userstatus: loggedinUser,
+    };
     res.render("urls_new", templateVars);
-  }
-
+  } else {
   res.redirect(`/login`);
+  }
 });
 
 //GET URL SHOW PAGE
@@ -176,7 +119,8 @@ app.get("/urls/:shortURL", (req, res) => {
     shortURL: key,
     longURL: urlDatabase[key]["longURL"],
     urls: u,
-    username: loggedinUser,
+    users: users,
+    userstatus: loggedinUser,
     error: null,
   }; //urlDatabase?u
   res.render("urls_show", templateVars);
@@ -199,58 +143,47 @@ app.get("/*", (req, res) => {
 //POST REQUESTS
 ///
 ///
+const templateVars = {
+  urls: urlDatabase,
+  users: users,
+  userstatus: null,
+  error: ""
+};
 
 //LOGIN
 app.post("/login", (req, res) => {
-  let reqEmail = req.body.email;
-  let password = req.body.password; //txt password
-  let currentPassword = validator2(reqEmail); //find hash version of password
-  console.log(currentPassword);
+  let email = req.body.email;
+  let password = req.body.password;
+  let currentPassword = hashLookup(email, users);
   let comparedPass = false;
   if (currentPassword !== false) {
     comparedPass = bcrypt.compareSync(password, currentPassword);
   }
-  console.log(users);
-  console.log(currentPassword);
+  let usr = validator(email, currentPassword, users);
 
-  let usr = validator(reqEmail, currentPassword);
-
-  if (EmailError(reqEmail) === false && comparedPass === false) {
-    //if email is wrong, and password is wrong, return msg below
-    res.status(403); //if a field is emply do this.
-    const templateVars = {
-      urls: urlDatabase,
-      username: null,
-      error: "403 Error - E-mail and Password are Incorrect, Please Try Again!",
-    };
-    res.render("login", templateVars);
-  } else if (EmailError(reqEmail) === false && password !== "") {
-    //if email is wrong, and password field isnt empty, return incorrect email
+  if (email === "" && password === "") {
     res.status(403);
-    const templateVars = {
-      urls: urlDatabase,
-      username: null,
-      error: "403 Error - Incorrect E-mail!",
-    };
-    res.render("login", templateVars);
-  } else if (comparedPass === false && EmailError(reqEmail) === true) {
-    //if password is wrong but email is right, return message
+    res.redirect("/register");
+  } else if (email !== "" && password === "") {
     res.status(403);
-    const templateVars = {
-      urls: urlDatabase,
-      username: null,
-      error: "403 Error - Incorrect Password!",
-    };
+      templateVars.error = "Please Enter A Password!";
     res.render("login", templateVars);
-  } else if (usr === true) {
-    //if everything is correect and user exists, create cookie and start sesion
-    usr = validator(reqEmail, currentPassword, usr);
+  } else if (email === "" && password !== "") {
+    res.status(403);
+      templateVars.error = "Please Enter A E-mail!";
+    res.render("login", templateVars);
+  } else if (checkUserEmail(email, users) === false && password !== "") {
+    res.status(403);
+      templateVars.error = "Incorrect E-mail! Please Register, or try again!";
+    res.render("login", templateVars);
+  } else if (checkUserEmail(email, users) === true && comparedPass === false) {
+    res.status(403);
+    templateVars.error = "Incorrect Password!";
+    res.render("login", templateVars);
+  } else {
+    usr = validator(email, currentPassword, users, usr);
     req.session.user_id = usr;
     res.redirect("/urls");
-  } else {
-    //otherwise send to registration page.
-    res.redirect("/register");
-    console.log(`user doesn't exist`);
   }
 });
 
@@ -262,24 +195,16 @@ app.post("/logout", (req, res) => {
 
 //REGISTRATION
 app.post("/register", (req, res) => {
-  let reqEmail = req.body.email;
+  let email = req.body.email;
   let password = req.body.password;
 
   if (req.body.email === "" || password === "") {
     res.status(400);
-    const templateVars = {
-      urls: urlDatabase,
-      username: null,
-      error: "400 Error - Fields Cannot Be Blank",
-    };
+      templateVars.error = "400 Error - Fields Cannot Be Blank";
     res.render("registration", templateVars);
-  } else if (req.body.email === validator(reqEmail)) {
+  } else if (checkUserEmail(email, users) === true) {
     res.status(400);
-    const templateVars = {
-      urls: urlDatabase,
-      username: null,
-      error: "400 Error - Username Unavailable",
-    };
+      templateVars.error = "User unavailable";
     res.render("registration", templateVars);
   } else {
     const hashedPassword = bcrypt.hashSync(password, 10);
@@ -313,7 +238,8 @@ app.post("/urls/:shortURL/delete", (req, res) => {
     shortURL: key,
     longURL: urlDatabase[key]["longURL"],
     urls: u,
-    username: loggedinUser,
+    users: users,
+    userstatus: loggedinUser,
     error: "Permission Denied",
   };
 
@@ -322,10 +248,10 @@ app.post("/urls/:shortURL/delete", (req, res) => {
     delete urlDatabase[key];
     delete req.params.shortURL;
     res.redirect("/urls");
-  }
-
-  res.status(403);
+  } else {
+     res.status(403);
   res.render(`urls_index`, templateVars);
+  }
 });
 
 //UPDATE A LONG URL
@@ -336,15 +262,16 @@ app.post("/urls/:shortURL", (req, res) => {
     shortURL: key,
     longURL: urlDatabase[key]["longURL"],
     urls: u,
-    username: loggedinUser,
+    users: users,
+    userstatus: loggedinUser,
     error: "Permission Denied",
   };
 
   if (req.session.user_id === urlDatabase[key]["UserID"]) {
     urlDatabase[key]["longURL"] = req.body.longURL;
     res.redirect(`/urls`);
-  }
-
+  } else {
   res.status(403);
   res.render(`urls_show`, templateVars);
+  }
 });
