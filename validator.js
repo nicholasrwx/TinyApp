@@ -1,5 +1,5 @@
 //VALIDATOR FOR USERNAME AND PASSWORD
-const validator = function (email, currentPassword, users, usr) {
+const validator = function(email, currentPassword, users, usr) {
   for (let user in users) {
     if (email && currentPassword) {
       if (

@@ -42,7 +42,7 @@ const users = {
 };
 
 //RANDOM STRING GENERATOR
-const generateRandomString = function () {
+const generateRandomString = function() {
   return Math.random().toString(36).substr(2, 6);
 };
 
