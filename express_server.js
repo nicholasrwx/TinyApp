@@ -46,16 +46,18 @@ const generateRandomString = function () {
   return Math.random().toString(36).substr(2, 6);
 };
 
-//GET REQUESTS
+const vars = {
+  urls: urlDatabase,
+  users: users,
+  userstatus: null,
+  error: "",
+};
 
+//GET REQUESTS
 //TINY APP PAGE
 app.get("/", (req, res) => {
-  const templateVars = {
-    urls: urlDatabase,
-    users: users,
-    userstatus: loggedinUser,
-  };
-  res.render("homepage", templateVars);
+  vars.userstatus = loggedinUser;
+  res.render("homepage", vars);
 });
 
 //URLS PAGE
@@ -66,48 +68,36 @@ app.get("/urls", (req, res) => {
     loggedinUser = req.session.user_id;
   }
 
-  const templateVars = {
+  const vars = {
     urls: urlsForUser(req.session.user_id, urlDatabase),
     users: users,
     userstatus: loggedinUser,
     error: null,
   };
-  res.render("urls_index", templateVars);
+  res.render("urls_index", vars);
 });
 
 //GET REGISTRATION PAGE
 app.get("/register", (req, res) => {
-  const templateVars = {
-    urls: urlDatabase,
-    users: users,
-    userstatus: null,
-    error: null,
-  };
-  res.render("registration", templateVars);
+  vars.userstatus = null;
+  vars.error = null;
+  res.render("registration", vars);
 });
 
 //GET LOGIN PAGE
 app.get("/login", (req, res) => {
-  const templateVars = {
-    urls: urlDatabase,
-    users: users,
-    userstatus: null,
-    error: null,
-  };
-  res.render("login", templateVars);
+  vars.userstatus = null;
+  vars.error = null;
+  res.render("login", vars);
 });
 
 //GET NEW URL PAGE
 app.get("/urls/new", (req, res) => {
   if (loggedinUser !== null && loggedinUser !== undefined) {
-    const templateVars = {
-      urls: urlDatabase,
-      users: users,
-      userstatus: loggedinUser,
-    };
-    res.render("urls_new", templateVars);
+    vars.userstatus = loggedinUser;
+    res.render("urls_new", vars);
   } else {
-  res.redirect(`/login`);
+    res.redirect(`/login`);
   }
 });
 
@@ -115,7 +105,7 @@ app.get("/urls/new", (req, res) => {
 app.get("/urls/:shortURL", (req, res) => {
   const u = "urls";
   const key = req.params.shortURL;
-  const templateVars = {
+  const vars = {
     shortURL: key,
     longURL: urlDatabase[key]["longURL"],
     urls: u,
@@ -123,7 +113,7 @@ app.get("/urls/:shortURL", (req, res) => {
     userstatus: loggedinUser,
     error: null,
   }; //urlDatabase?u
-  res.render("urls_show", templateVars);
+  res.render("urls_show", vars);
 });
 
 //GET LONG URL PAGE - VIA - CLICKABLE SHORT LINK
@@ -138,18 +128,7 @@ app.get("/*", (req, res) => {
   res.render("404");
 });
 
-///
-///
 //POST REQUESTS
-///
-///
-const templateVars = {
-  urls: urlDatabase,
-  users: users,
-  userstatus: null,
-  error: ""
-};
-
 //LOGIN
 app.post("/login", (req, res) => {
   let email = req.body.email;
@@ -166,20 +145,20 @@ app.post("/login", (req, res) => {
     res.redirect("/register");
   } else if (email !== "" && password === "") {
     res.status(403);
-      templateVars.error = "Please Enter A Password!";
-    res.render("login", templateVars);
+    vars.error = "Please Enter A Password!";
+    res.render("login", vars);
   } else if (email === "" && password !== "") {
     res.status(403);
-      templateVars.error = "Please Enter A E-mail!";
-    res.render("login", templateVars);
+    vars.error = "Please Enter A E-mail!";
+    res.render("login", vars);
   } else if (checkUserEmail(email, users) === false && password !== "") {
     res.status(403);
-      templateVars.error = "Incorrect E-mail! Please Register, or try again!";
-    res.render("login", templateVars);
+    vars.error = "Incorrect E-mail! Please Register, or try again!";
+    res.render("login", vars);
   } else if (checkUserEmail(email, users) === true && comparedPass === false) {
     res.status(403);
-    templateVars.error = "Incorrect Password!";
-    res.render("login", templateVars);
+    vars.error = "Incorrect Password!";
+    res.render("login", vars);
   } else {
     usr = validator(email, currentPassword, users, usr);
     req.session.user_id = usr;
@@ -200,12 +179,12 @@ app.post("/register", (req, res) => {
 
   if (req.body.email === "" || password === "") {
     res.status(400);
-      templateVars.error = "400 Error - Fields Cannot Be Blank";
-    res.render("registration", templateVars);
+    vars.error = "400 Error - Fields Cannot Be Blank";
+    res.render("registration", vars);
   } else if (checkUserEmail(email, users) === true) {
     res.status(400);
-      templateVars.error = "User unavailable";
-    res.render("registration", templateVars);
+    vars.error = "User unavailable";
+    res.render("registration", vars);
   } else {
     const hashedPassword = bcrypt.hashSync(password, 10);
     const RandomID = generateRandomString();
@@ -234,7 +213,7 @@ app.post("/urls", (req, res) => {
 app.post("/urls/:shortURL/delete", (req, res) => {
   const key = req.params.shortURL;
   const u = "urls";
-  const templateVars = {
+  const vars = {
     shortURL: key,
     longURL: urlDatabase[key]["longURL"],
     urls: u,
@@ -249,8 +228,8 @@ app.post("/urls/:shortURL/delete", (req, res) => {
     delete req.params.shortURL;
     res.redirect("/urls");
   } else {
-     res.status(403);
-  res.render(`urls_index`, templateVars);
+    res.status(403);
+    res.render(`urls_index`, vars);
   }
 });
 
@@ -258,7 +237,7 @@ app.post("/urls/:shortURL/delete", (req, res) => {
 app.post("/urls/:shortURL", (req, res) => {
   const key = req.params.shortURL;
   const u = "urls";
-  const templateVars = {
+  const vars = {
     shortURL: key,
     longURL: urlDatabase[key]["longURL"],
     urls: u,
@@ -271,7 +250,7 @@ app.post("/urls/:shortURL", (req, res) => {
     urlDatabase[key]["longURL"] = req.body.longURL;
     res.redirect(`/urls`);
   } else {
-  res.status(403);
-  res.render(`urls_show`, templateVars);
+    res.status(403);
+    res.render(`urls_show`, vars);
   }
 });
